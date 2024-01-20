@@ -1,0 +1,338 @@
+La configuration d'un réseau avec une architecture ROAS (Router On A Stick) est généralement utilisée pour permettre à plusieurs réseaux VLAN de communiquer les uns avec les autres via un routeur. Voici une procédure de configuration de base pour un ROAS sur un routeur Cisco. Assurez-vous d'adapter ces étapes à votre équipement spécifique, car la configuration peut varier en fonction du modèle et du système d'exploitation de votre routeur.
+
+1. **Configuration des VLANs sur le switch :**
+   - Configurez vos VLANs sur le switch. Chaque VLAN devrait être configuré avec une interface de niveau 3 (SVI - Switched Virtual Interface) pour permettre au routeur de les atteindre.
+
+    ```bash
+    Switch(config)# vlan <VLAN_ID>
+    Switch(config-vlan)# name <VLAN_NAME>
+    Switch(config-vlan)# interface vlan <VLAN_ID>
+    Switch(config-if)# ip address <IP_ADDRESS> <SUBNET_MASK>
+    Switch(config-if)# no shutdown
+    ```
+
+2. **Configuration de l'interface trunk :**
+   - Configurez l'interface du switch connectée au routeur en tant que trunk pour transporter plusieurs VLANs.
+
+    ```bash
+    Switch(config)# interface <INTERFACE_ID>
+    Switch(config-if)# switchport mode trunk
+    Switch(config-if)# switchport trunk allowed vlan <VLAN_LIST>
+    ```
+
+3. **Configuration de l'interface du routeur :**
+   - Configurez l'interface du routeur connectée au switch en tant qu'interface subinterface.
+
+    ```bash
+    Router(config)# interface <INTERFACE_ID>.<SUBINTERFACE_ID>
+    Router(config-subif)# encapsulation dot1Q <VLAN_ID>
+    Router(config-subif)# ip address <IP_ADDRESS> <SUBNET_MASK>
+    Router(config-subif)# no shutdown
+    ```
+
+4. **Activation du routage sur le routeur :**
+   - Activez le routage sur le routeur pour permettre la communication entre les VLANs.
+
+    ```bash
+    Router(config)# ip routing
+    ```
+
+Assurez-vous de remplacer `<VLAN_ID>`, `<VLAN_NAME>`, `<IP_ADDRESS>`, `<SUBNET_MASK>`, `<INTERFACE_ID>`, `<SUBINTERFACE_ID>`, et `<VLAN_LIST>` par vos propres valeurs.
+
+Ces étapes constituent une configuration de base pour un ROAS. Selon vos besoins spécifiques, vous pourriez également vouloir configurer des listes de contrôle d'accès (ACL), le protocole de routage entre le routeur et le réseau local, et d'autres fonctionnalités avancées en fonction de la complexité de votre réseau.
+
+# ---------------  un exemple d'utilisation ---------------: 
+
+
+Imaginons un scénario où une entreprise dispose de plusieurs services ou départements distincts et souhaite les isoler dans des réseaux virtuels (VLANs) tout en permettant une communication contrôlée entre eux. Dans cet exemple, nous allons utiliser trois VLANs pour représenter trois départements différents : le département des ventes, le département des finances et le département de la recherche et développement (R&D).
+
+1. **Configuration des VLANs :**
+   - Sur le switch, configurez trois VLANs pour représenter chaque département et attribuez-leur des adresses IP pour les interfaces de niveau 3 (SVI).
+
+    ```bash
+    Switch(config)# vlan 10
+    Switch(config-vlan)# name Sales
+    Switch(config-vlan)# interface vlan 10
+    Switch(config-if)# ip address 192.168.10.1 255.255.255.0
+    Switch(config-if)# no shutdown
+
+    Switch(config)# vlan 20
+    Switch(config-vlan)# name Finance
+    Switch(config-vlan)# interface vlan 20
+    Switch(config-if)# ip address 192.168.20.1 255.255.255.0
+    Switch(config-if)# no shutdown
+
+    Switch(config)# vlan 30
+    Switch(config-vlan)# name RnD
+    Switch(config-vlan)# interface vlan 30
+    Switch(config-if)# ip address 192.168.30.1 255.255.255.0
+    Switch(config-if)# no shutdown
+    ```
+
+2. **Configuration de l'interface trunk :**
+   - Configurez l'interface du switch connectée au routeur en tant que trunk.
+
+    ```bash
+    Switch(config)# interface GigabitEthernet0/1
+    Switch(config-if)# switchport mode trunk
+    Switch(config-if)# switchport trunk allowed vlan 10,20,30
+    ```
+
+3. **Configuration de l'interface du routeur :**
+   - Configurez trois sous-interfaces sur l'interface du routeur connectée au switch, représentant chaque VLAN.
+
+    ```bash
+    Router(config)# interface GigabitEthernet0/0.10
+    Router(config-subif)# encapsulation dot1Q 10
+    Router(config-subif)# ip address 192.168.10.254 255.255.255.0
+    Router(config-subif)# no shutdown
+
+    Router(config)# interface GigabitEthernet0/0.20
+    Router(config-subif)# encapsulation dot1Q 20
+    Router(config-subif)# ip address 192.168.20.254 255.255.255.0
+    Router(config-subif)# no shutdown
+
+    Router(config)# interface GigabitEthernet0/0.30
+    Router(config-subif)# encapsulation dot1Q 30
+    Router(config-subif)# ip address 192.168.30.254 255.255.255.0
+    Router(config-subif)# no shutdown
+    ```
+
+Dans ce scénario, les employés du département des ventes peuvent accéder aux ressources du département des finances et vice versa, mais l'accès au département R&D est limité. Cela peut être configuré en utilisant des listes de contrôle d'accès (ACL) sur le routeur pour contrôler le trafic entre les VLANs.
+
+Cette configuration permet une isolation logique des départements tout en permettant une connectivité contrôlée, ce qui est utile dans de nombreux environnements d'entreprise pour des raisons de sécurité et d'organisation.
+
+
+#  --------------- La topologie -------------------- 
+
+
+La topologie de réseau que nous venons de décrire est un exemple de configuration de type Router On A Stick (ROAS) avec trois VLANs représentant différents départements. Voici une représentation graphique simplifiée de la topologie:
+
+```
+                            +-------------------+
+                            |      Router       |
+                            |                   |
+                            |    +-----------+  |
+                            |    | SubIF 10  |  |
+                            |    +-----------+  |
+                            |    | SubIF 20  |  |
+                            |    +-----------+  |
+                            |    | SubIF 30  |  |
+                            +----|-----------|--+
+                                 | Gig0/0     |
+                                 +-----|-------+
+                                       |
+                             +---------|----------+
+                             |     Trunk Link     |
+                             |                    |
++-------------------------+  |  +-------------------------+
+|        Switch           |  |  |         Switch          |
+|                         |  |  |                         |
+| +----------+            |  |  | +----------+            |
+| | VLAN 10  |            |  |  | | VLAN 20  |            |
+| |          |            |  |  | |          |            |
+| +----------+            |  |  | +----------+            |
+| | VLAN 20  |            |  |  | | VLAN 30  |            |
+| |          |            |  |  | |          |            |
+| +----------+            |  |  | +----------+            |
++-------------------------+  |  +-------------------------+
+                             |                    |
+                             +------------------+-+
+                                               |
+                                           +---|---+
+                                           | Host  |
+                                           +-------+
+```
+
+Dans ce schéma:
+
+- Le routeur a une seule interface physique (`Gig0/0`) connectée au switch via un lien trunk.
+- Chaque VLAN sur le switch est représenté par une interface de niveau 3 (SVI).
+- Le routeur utilise des sous-interfaces (`SubIF`) sur son interface (`Gig0/0`) pour interagir avec chaque VLAN.
+- Les liaisons entre le switch et les périphériques (switches et routeur) sont des liens trunk, permettant de transporter le trafic de plusieurs VLANs.
+
+Ceci est une représentation simplifiée, et dans une configuration réelle, les adresses IP, les interfaces et d'autres paramètres seraient configurés en fonction des besoins spécifiques de votre réseau.
+
+-----------------------------------------------------------------------------------
+
+Dans le contexte d'un réseau avec un routeur, le terme "trunk" est souvent utilisé pour décrire une connexion entre un switch et un routeur, notamment dans une configuration ROAS (Router On A Stick). Le lien trunk est configuré pour permettre le passage de plusieurs VLANs entre le switch et le routeur sur une seule interface physique.
+
+Voici comment configurer un lien trunk entre un switch et un routeur dans une configuration ROAS :
+
+1. **Configuration du Switch (pour le lien trunk) :**
+   - Configuration du port connecté au routeur en tant que trunk.
+
+    ```bash
+    Switch(config)# interface GigabitEthernet0/1
+    Switch(config-if)# switchport mode trunk
+    Switch(config-if)# switchport trunk allowed vlan <VLAN_LIST>
+    ```
+
+   - Assurez-vous de spécifier `<VLAN_LIST>` avec la liste des VLANs que vous souhaitez permettre de traverser le lien trunk.
+
+2. **Configuration du Routeur (pour les sous-interfaces) :**
+   - Configuration des sous-interfaces sur l'interface connectée au switch. Chaque sous-interface correspond à un VLAN différent.
+
+    ```bash
+    Router(config)# interface GigabitEthernet0/0.10
+    Router(config-subif)# encapsulation dot1Q 10
+    Router(config-subif)# ip address 192.168.10.1 255.255.255.0
+    Router(config-subif)# 
+
+    Router(config)# interface GigabitEthernet0/0.20
+    Router(config-subif)# encapsulation dot1Q 20
+    Router(config-subif)# ip address 192.168.20.1 255.255.255.0
+    Router(config-subif)# 
+
+    Router(config)# interface GigabitEthernet0/0.30
+    Router(config-subif)# encapsulation dot1Q 30
+    Router(config-subif)# ip address 192.168.30.1 255.255.255.0
+    Router(config-subif)#
+    ```
+
+   - Chaque sous-interface doit être configurée avec le numéro de VLAN correspondant, et l'adresse IP doit être attribuée en conséquence.
+
+Avec cette configuration, le routeur peut maintenant router le trafic entre les VLANs, car chaque sous-interface est associée à un VLAN spécifique.
+
+Assurez-vous d'adapter ces commandes en fonction du modèle de votre routeur et de votre switch, car la syntaxe peut varier légèrement entre différents équipements.
+
+------------------------------------------------------------------------------------------
+
+# Different types de Vlan :
+
+Les VLANs (Virtual Local Area Networks) sont utilisés pour segmenter un réseau physique en plusieurs réseaux logiques distincts, permettant d'améliorer la performance, la sécurité et la gestion du réseau. Voici quelques types de VLANs couramment utilisés, ainsi que leurs rôles typiques :
+
+1. **VLAN de données (Default VLAN) :**
+   - **Rôle :** Le VLAN de données est souvent le VLAN par défaut attribué à tous les ports d'un switch. Les utilisateurs et les périphériques connectés à ces ports appartiennent à ce VLAN par défaut, sauf si un VLAN spécifique est configuré pour le port.
+
+2. **VLAN natif (Native VLAN) :**
+   - **Rôle :** Le VLAN natif est utilisé sur les liens trunks pour transporter le trafic qui ne porte pas d'étiquette VLAN. Il est important que le VLAN natif soit le même sur les deux extrémités du lien trunk pour assurer une communication correcte.
+
+# c'est quoi un trafic qui ne porte pas d'etiquette vlan , ça resemble à quoi  
+
+
+
+3. **VLAN de gestion :**
+   - **Rôle :** Ce VLAN est souvent utilisé pour les opérations de gestion du réseau. Les adresses IP des périphériques réseau, tels que les switches, routeurs ou points d'accès, sont souvent configurées dans ce VLAN pour une gestion facilitée.
+
+4. **VLAN de voix (Voice VLAN) :**
+   - **Rôle :** Conçu pour le trafic voix sur IP (VoIP), ce VLAN est dédié aux téléphones IP et aux équipements associés. Il garantit une qualité de service (QoS) appropriée pour le trafic vocal et permet de le traiter de manière prioritaire.
+
+5. **VLAN utilisateur :**
+   - **Rôle :** Les VLANs utilisateur sont créés pour regrouper des utilisateurs ou des périphériques en fonction de leur rôle, de leur département ou de leurs besoins spécifiques. Ils permettent de segmenter le trafic pour des raisons de sécurité ou d'organisation.
+
+6. **VLAN invité :**
+   - **Rôle :** Ce VLAN est souvent utilisé pour isoler le trafic des invités ou des visiteurs du reste du réseau. Il limite l'accès aux ressources internes et offre une couche de sécurité supplémentaire.
+
+7. **VLAN de serveur :**
+   - **Rôle :** Les serveurs, comme les serveurs de fichiers, les serveurs d'applications, ou les serveurs de bases de données, peuvent être regroupés dans un VLAN dédié pour des raisons de performance et de sécurité.
+
+8. **VLAN de redondance (Redundancy VLAN) :**
+   - **Rôle :** Utilisé dans des architectures de redondance, ce VLAN est utilisé pour maintenir la connectivité réseau en cas de défaillance d'un lien ou d'un équipement. Il est associé à des protocoles tels que HSRP (Hot Standby Router Protocol) ou VRRP (Virtual Router Redundancy Protocol).
+
+Il est important de noter que les rôles des VLANs peuvent varier en fonction des besoins spécifiques de chaque réseau. La configuration des VLANs doit être planifiée soigneusement pour répondre aux exigences de sécurité, de gestion et de performance de l'infrastructure réseau.
+
+ 
+-----------------------------------------------------------------------------------------
+
+D'accord, je comprends. Pour des raisons de sécurité, il est parfois recommandé de ne pas utiliser le VLAN par défaut (VLAN 1) pour les données utilisateur. Voici une mise à jour de la configuration où nous n'utilisons pas le VLAN 1 par défaut :
+
+**Configuration du Switch (Switch de Niveau 2):**
+
+```bash
+Switch> enable
+Switch# configure terminal
+
+# Création des VLANs
+Switch(config)# vlan 10
+Switch(config-vlan)# name VLAN10
+Switch(config-vlan)# exit
+
+Switch(config)# vlan 20
+Switch(config-vlan)# name VLAN20
+Switch(config-vlan)# exit
+
+# Configuration de l'interface de gestion pour le VLAN de gestion
+Switch(config)# interface Vlan99
+Switch(config-if)# ip address 192.168.99.1 255.255.255.0
+Switch(config-if)# no shutdown
+Switch(config-if)# exit
+
+# Configuration du lien trunk (port GigabitEthernet1/0/1 en supposant que c'est le port connecté au routeur)
+Switch(config)# interface GigabitEthernet1/0/1
+Switch(config-if)# switchport mode trunk
+Switch(config-if)# switchport trunk allowed vlan 10,20
+Switch(config-if)# switchport trunk native vlan 99  # Configuration de la VLAN native
+Switch(config-if)# exit
+
+# Configuration des ports pour les utilisateurs (par exemple, ports 2 à 24)
+Switch(config)# interface range FastEthernet0/2 - 24
+Switch(config-if-range)# switchport mode access
+Switch(config-if-range)# switchport access vlan 10
+Switch(config-if-range)# exit
+
+# Configuration d'un port pour un serveur (par exemple, port 25)
+Switch(config)# interface FastEthernet0/25
+Switch(config-if)# switchport mode access
+Switch(config-if)# switchport access vlan 20
+Switch(config-if)# exit
+
+# Enregistrement de la configuration
+Switch(config)# exit
+Switch# write memory
+```
+
+**Configuration du Routeur (Router On A Stick):**
+
+```bash
+Router> enable
+Router# configure terminal
+
+# Configuration de l'interface physique connectée  au switch en tant que lien trunk
+Router(config)# interface GigabitEthernet0/0
+Router(config-if)# encapsulation dot1Q 99 native
+Router(config-if)# no ip address
+Router(config-if)# exit
+
+# Configuration de la sous-interface pour VLAN 10
+Router(config)# interface GigabitEthernet0/0.10
+Router(config-subif)# encapsulation dot1Q 10
+Router(config-subif)# ip address 192.168.10.1 255.255.255.0
+Router(config-subif)# exit
+
+# Configuration de la sous-interface pour VLAN 20
+Router(config)# interface GigabitEthernet0/0.20
+Router(config-subif)# encapsulation dot1Q 20
+Router(config-subif)# ip address 192.168.20.1 255.255.255.0
+Router(config-subif)# exit
+
+# Enregistrement de la configuration
+Router(config)# exit
+Router# write memory
+```
+
+Dans cet exemple mis à jour :
+
+- Le VLAN 99 est utilisé comme VLAN de gestion pour l'interface SVI sur le switch.
+- La VLAN native sur le lien trunk est configurée sur le VLAN 99.
+- Les VLANs 10 et 20 sont utilisés pour les données utilisateur.
+
+N'oubliez pas d'ajuster les numéros de VLAN, les adresses IP et d'autres paramètres en fonction de votre configuration spécifique.
+
+Dans cet exemple:
+
+- Le switch est configuré avec deux VLANs (VLAN10 et VLAN20) et un port trunk pour connecter le routeur.
+- Le routeur est configuré avec deux sous-interfaces sur l'interface GigabitEthernet0/0, correspondant à VLAN10 et VLAN20.
+- Chaque VLAN a sa propre plage d'adresses IP sur le routeur.
+
+N'oubliez pas d'ajuster les numéros de VLAN, les adresses IP et d'autres paramètres en fonction de votre configuration spécifique.
+
+
+----------------------------------------------------------------------------------------
+
+
+"Router On A Stick" se traduit en français par "Routeur sur une perche". C'est une expression utilisée dans le domaine des réseaux informatiques pour décrire une configuration où un routeur est utilisé pour interconnecter différents VLANs sur un réseau local à l'aide d'une seule interface physique, généralement avec l'aide de sous-interfaces et de tronçonnage de liens (trunking).
+
+Dans un scénario ROAS, le routeur utilise une seule interface physique pour communiquer avec plusieurs VLANs, d'où la comparaison avec une "perche" unique qui connecte différents segments du réseau. Chaque VLAN est généralement associé à une sous-interface sur le routeur, permettant ainsi au routeur de router le trafic entre les VLANs. Cette approche est souvent utilisée lorsque des commutateurs de niveau 2 sont déployés pour segmenter le réseau en VLANs, et un routeur est nécessaire pour permettre la communication entre ces VLANs.
+
+L'expression "Router On A Stick" met en évidence le concept de tronçonnage de liens (trunking) et d'utilisation de sous-interfaces sur un routeur pour étendre les capacités de routage à travers plusieurs réseaux VLANs.
