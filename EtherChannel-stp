@@ -1,0 +1,93 @@
+### Commandes EtherChannel :
+
+1. **Création d'un EtherChannel** :
+   ```
+   switch(config)# interface range gigabitEthernet 0/1 - 4
+   switch(config-if-range)# channel-group 1 mode desirable
+   ```
+
+2. **Vérification des interfaces EtherChannel** :
+   ```
+   switch# show etherchannel summary
+   ```
+
+3. **Configuration du mode EtherChannel** :
+   ```
+   switch(config)# interface port-channel 1
+   switch(config-if)# mode [on | active | passive]
+   ```
+
+4. **Vérification des détails de l'EtherChannel** :
+   ```
+   switch# show interfaces port-channel 1
+   ```
+
+### Commandes STP :
+
+1. **Activation du STP** :
+   ```
+   switch(config)# spanning-tree mode [pvst | rapid-pvst | mst]
+   ```
+
+2. **Vérification de la topologie du STP** :
+   ```
+   switch# show spanning-tree
+   ```
+
+3. **Configuration de la priorité du pont** :
+   ```
+   switch(config)# spanning-tree vlan 1 priority 24576
+   ```
+
+4. **Configuration de la priorité des ports** :
+   ```
+   switch(config)# interface gigabitEthernet 0/1
+   switch(config-if)# spanning-tree port-priority 32
+   ```
+
+5. **Vérification de la priorité du pont et des ports** :
+   ```
+   switch# show spanning-tree vlan 1 root
+   ```
+
+6. **Activation de l'EtherChannel sur le STP** :
+   ```
+   switch(config)# spanning-tree etherchannel guard misconfig
+   ```
+
+7. **Configuration du coût d'un port** :
+   ```
+   switch(config)# interface gigabitEthernet 0/1
+   switch(config-if)# spanning-tree cost 10
+   ```
+-- Concepts d'EtherChannel et du Spanning Tree Protocol (STP) :
+
+### EtherChannel :
+
+**Définition :** EtherChannel est une technologie permettant de regrouper plusieurs liens physiques entre deux commutateurs en un seul lien logique, augmentant ainsi la bande passante et fournissant une redondance.
+
+**Fonctionnement :**
+- Les ports regroupés doivent avoir la même vitesse, le même duplex et être configurés dans le même mode (auto ou desirable).
+- Le protocole PAgP (Port Aggregation Protocol) ou LACP (Link Aggregation Control Protocol) est utilisé pour négocier la formation de l'EtherChannel.
+- Lorsqu'un EtherChannel est établi, les trames sont réparties sur les liens en fonction de l'adresse MAC source ou de l'adresse IP source/destination, selon la méthode de répartition choisie.
+- En cas de défaillance d'un des liens physiques, le trafic est automatiquement redistribué sur les liens restants.
+
+### Spanning Tree Protocol (STP) :
+
+**Définition :** Le Spanning Tree Protocol est un protocole utilisé pour éviter les boucles dans les réseaux Ethernet redondants en désactivant sélectivement les liens redondants pour former un arbre sans boucle.
+
+**Fonctionnement :**
+- Le STP sélectionne un seul chemin sans boucle vers chaque segment de réseau.
+- Il utilise un algorithme pour désigner un seul commutateur racine pour l'ensemble du réseau.
+- Les commutateurs échangent des messages BPDU (Bridge Protocol Data Units) pour établir la topologie du réseau et calculer les chemins les plus courts vers la racine.
+- Le STP met en attente certains liens redondants pour éviter la formation de boucles. En cas de défaillance d'un lien actif, le STP reconverge en rétablissant un nouveau chemin sans boucle.
+- Différentes versions du STP existent, notamment STP classique (802.1D), Rapid Spanning Tree Protocol (RSTP - 802.1w) et Multiple Spanning Tree Protocol (MSTP - 802.1s).
+
+**Concepts clés :**
+- Bridge ID : Une combinaison de l'adresse de priorité du pont et de l'adresse MAC du pont utilisée pour sélectionner le pont racine.
+- Port de racine : Le port d'un commutateur le plus proche du commutateur racine pour un segment de réseau donné.
+- BPDU : Messages échangés entre les commutateurs pour élire le commutateur racine et calculer les chemins les plus courts.
+- Port de désignation : Le port sur un commutateur par lequel transite le trafic vers un segment de réseau spécifique.
+- Port de blocage : Les ports désactivés par le STP pour éviter les boucles.
+
+Ces concepts et technologies sont essentiels pour la conception, la mise en œuvre et le dépannage des réseaux Ethernet, en particulier dans les environnements où la redondance et la disponibilité sont des préoccupations importantes.
