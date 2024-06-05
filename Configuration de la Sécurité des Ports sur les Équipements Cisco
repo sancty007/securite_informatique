@@ -1,0 +1,106 @@
+### Configuration de la Sécurité des Ports sur les Équipements Cisco
+
+#### Concepts de la Sécurité des Ports
+
+1. **Principes de Base de la Sécurité des Ports**:
+   - **Objectif**: Restreindre l'accès à une interface en limitant et en identifiant les adresses MAC des postes de travail autorisés à accéder au port.
+   - **Adresses MAC Sécurisées Statiques**: Adresses MAC configurées manuellement.
+   - **Adresses MAC Sécurisées Dynamiques**: Adresses MAC apprises par le commutateur à partir du trafic entrant.
+   - **Adresses MAC Sécurisées Sticky**: Adresses apprises dynamiquement qui sont sauvegardées dans la configuration en cours et conservées après un redémarrage.
+
+2. **Modes de Violation**:
+   - **Protect**: Rejette les paquets avec des adresses source inconnues sans incrémenter le compteur de violations de sécurité.
+   - **Restrict**: Rejette les paquets avec des adresses source inconnues et incrémente le compteur de violations de sécurité.
+   - **Shutdown**: Met le port en état err-disable en cas de violation et incrémente le compteur de violations de sécurité. C'est le mode par défaut.
+
+3. **Configuration des Limites d'Adresses MAC**:
+   - **Nombre Maximum d'Adresses**: Limite le nombre d'adresses MAC qui peuvent être apprises sur un port.
+
+#### Prérequis pour la Configuration
+
+1. **Accès à l'Interface de Commande du Commutateur (CLI)**: Via une connexion console, SSH ou Telnet.
+2. **Privilèges Administratifs**: Accès en mode privilégié sur le commutateur.
+3. **Connaissance des Adresses MAC à Autoriser**: Si vous configurez des adresses statiques ou sticky.
+
+#### Étapes de Configuration
+
+1. **Accéder au Mode de Configuration de l'Interface**:
+   ```plaintext
+   Switch> enable
+   Switch# configure terminal
+   Switch(config)# interface FastEthernet 0/1
+   ```
+
+2. **Activer la Sécurité des Ports**:
+   ```plaintext
+   Switch(config-if)# switchport mode access
+   Switch(config-if)# switchport port-security
+   ```
+
+3. **Configurer le Nombre Maximum d'Adresses MAC**:
+   ```plaintext
+   Switch(config-if)# switchport port-security maximum 2
+   ```
+
+4. **Configurer des Adresses MAC Statiques (optionnel)**:
+   ```plaintext
+   Switch(config-if)# switchport port-security mac-address 0000.1111.2222
+   Switch(config-if)# switchport port-security mac-address 0000.3333.4444
+   ```
+
+5. **Configurer des Adresses MAC Sticky (optionnel)**:
+   ```plaintext
+   Switch(config-if)# switchport port-security mac-address sticky
+   ```
+
+6. **Configurer le Mode de Violation**:
+   ```plaintext
+   Switch(config-if)# switchport port-security violation restrict
+   ```
+
+7. **Vérifier la Configuration**:
+   ```plaintext
+   Switch# show port-security interface FastEthernet 0/1
+   ```
+
+#### Cas Pratique
+
+Supposons que vous voulez sécuriser un port (FastEthernet 0/1) pour qu'il n'accepte que deux adresses MAC spécifiques et que, en cas de tentative d'accès par une adresse MAC non autorisée, les paquets soient rejetés et la violation soit enregistrée.
+
+**Étapes**:
+
+1. **Accéder au Mode de Configuration de l'Interface**:
+   ```plaintext
+   Switch> enable
+   Switch# configure terminal
+   Switch(config)# interface FastEthernet 0/1
+   ```
+
+2. **Activer la Sécurité des Ports**:
+   ```plaintext
+   Switch(config-if)# switchport mode access
+   Switch(config-if)# switchport port-security
+   ```
+
+3. **Configurer le Nombre Maximum d'Adresses MAC**:
+   ```plaintext
+   Switch(config-if)# switchport port-security maximum 2
+   ```
+
+4. **Configurer des Adresses MAC Statiques**:
+   ```plaintext
+   Switch(config-if)# switchport port-security mac-address 0000.1111.2222
+   Switch(config-if)# switchport port-security mac-address 0000.3333.4444
+   ```
+
+5. **Configurer le Mode de Violation**:
+   ```plaintext
+   Switch(config-if)# switchport port-security violation restrict
+   ```
+
+6. **Vérifier la Configuration**:
+   ```plaintext
+   Switch# show port-security interface FastEthernet 0/1
+   ```
+
+Cette configuration permet de garantir que seules les adresses MAC spécifiées peuvent accéder au port, et toute tentative d'accès par une adresse MAC non autorisée sera enregistrée et les paquets seront rejetés.
